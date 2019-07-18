@@ -33,7 +33,10 @@ dashboardBody(
         
         tabItem(tabName = "Models", strong(em(h2("Data Modeling"))), 
                 box(title="About", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background = "green", h2("Here, we want to predict the value of the Age Adjusted Death Rate according to some predictor values - Year, State, and Cause")),
-                selectizeInput("pred", "Explanatory Variables", choices = c("Year", "Cause", "State"))),
+                selectizeInput("pred", "Explanatory Variables", choices = c("Year", "Cause", "State")),
+                withMathJax(),
+                helpText('An irrational Number \\(\\sqrt{2}\\) and a fraction $$1-\\frac{1}{2}$$')
+                ),
         
         tabItem(tabName = "Data", strong(em(h2("Data Tables"))),
                 box(title="About this app", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width = 10, background="green",
@@ -41,7 +44,7 @@ dashboardBody(
                        You can also view different causes in the drop down menu or click the button the view the full dataset for the cause of death. Feel free to play around!")),
                 selectizeInput("cause", "Causes", choices = levels(as.factor(pdata$Cause))),
                 downloadButton("DownloadData", "Download Full Data"),
-                box(title="Click to View", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background="green", 
+                box(title="Click to View/Hide", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background="green", 
                     tableOutput("Tables"))),
         
         tabItem(tabName = "Exploration", h2(uiOutput("title")),

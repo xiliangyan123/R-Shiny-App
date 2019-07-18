@@ -22,10 +22,10 @@ shinyServer(function(input, output, session) {
         tagList("Here you can see my code:", url)
     })
     
+    #Get our Filtered Data
     getData <- reactive({
         newData <- pdata %>% filter(pdata$Cause == input$causes)
     })
-    
     getData1 <- reactive({
         newData <- pdata %>% filter(pdata$Cause == input$cause)
     })

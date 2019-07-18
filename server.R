@@ -1,11 +1,10 @@
 library(shiny)
 library(shinydashboard)
 library(readr)
+library(devtools)
 library(dplyr)
 library(DT)
 library(ggplot2)
-
-setwd('C:/Users/xiliangyan123/Desktop/School/ST558/Project 3/Project3')
 
 data <- read_csv("Dataset.csv") 
 pdata <- data %>% filter(Year==2010:2015 & Cause!="All causes" & State!="United States")
@@ -51,7 +50,24 @@ shinyServer(function(input, output, session) {
         g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
         g + geom_point(size=input$size, aes(col=input$causes))
     })
+    
+    plotInput <- reactive({
+        #get filtered data
+        newData <- getData()
+        
+        #create plot
+        g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
+        g + geom_point(size=input$size, aes(col=input$causes))
+    })
 
+    output$DownloadPlot <- downloadHandler(
+        filename = function() { paste(input$causes, '.png', sep='') },
+        content = function(file) {
+            png(file)
+            print(plotInput())
+            dev.off()
+        })
+    
     #creating the dynamic titles for our exploration page
     output$title <- renderUI({
         text <- HTML("Exploring Data <br> <br> Scatterplot of Cause:",

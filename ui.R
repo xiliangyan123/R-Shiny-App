@@ -3,6 +3,7 @@ library(shinydashboard)
 library(readr)
 library(dplyr)
 library(tidyverse)
+library(devtools)
 
 #read in dataset
 data <- as_tibble(read_csv("Dataset.csv"))

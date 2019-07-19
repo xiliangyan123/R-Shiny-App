@@ -19,7 +19,7 @@ shinyServer(function(input, output, session) {
         tagList("Here you can find the dataset:", urldata)
     })
     output$tab <- renderUI({
-        tagList("Here you can see my code:", url)
+        tagList("Here you can see visit my github page to see code:", url)
     })
     
     #Get our Filtered Data
@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
      
     #create output of observations for data table page
     output$Tables <- renderTable({
-        newdata <- getData1() %>% head(n=10)
+        newdata <- getData1() 
     })
     
     #create output of observations for exploration page
@@ -109,4 +109,10 @@ shinyServer(function(input, output, session) {
         write.csv(getData(), file, row.names = FALSE)
     }
     )
+    
+    output$model1 <- renderUI({
+        newData <- getData()
+        model <- lm(AADR ~ Deaths, data=newData)
+
+    })
 })

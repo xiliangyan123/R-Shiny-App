@@ -32,11 +32,11 @@ dashboardBody(
         tabItem(tabName = "Clustering", strong(em(h2("Unsupervised Learning")))),
         
         tabItem(tabName = "Models", strong(em(h2("Data Modeling"))), 
-                box(title="About", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background = "green", h2("Here, we want to predict the value of the Age Adjusted Death Rate according to some predictor values - Year, State, and Cause")),
-                selectizeInput("pred", "Explanatory Variables", choices = c("Year", "Cause", "State")),
-                withMathJax(),
-                helpText('An irrational Number \\(\\sqrt{2}\\) and a fraction $$1-\\frac{1}{2}$$')
-                ),
+                box(title="About", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background = "green", h2("Here, we want to predict the value of the Age Adjusted Death Rate according to some predictor values - Year, State, and Cause"), 
+                    withMathJax(), helpText('An example of a simple linear reg. model - $$y = 4x + b$$'), helpText('An example of a multiple linear reg. model - $$y = 4x_1 + 5x_2 + 10x_1x_2$$')),
+                checkboxGroupInput("models", "Types of Models", choices = c("Simple Linear Regression", "Multiple Linear Regression")),
+                checkboxGroupInput("pred", "Explanatory Variables", choices = c("Year", "Cause", "State")),
+                uiOutput("model1")),
         
         tabItem(tabName = "Data", strong(em(h2("Data Tables"))),
                 box(title="About this app", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width = 10, background="green",
@@ -44,8 +44,8 @@ dashboardBody(
                        You can also view different causes in the drop down menu or click the button the view the full dataset for the cause of death. Feel free to play around!")),
                 selectizeInput("cause", "Causes", choices = levels(as.factor(pdata$Cause))),
                 downloadButton("DownloadData", "Download Full Data"),
-                box(title="Click to View/Hide", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background="green", 
-                    tableOutput("Tables"))),
+                # box(title="Click to View/Hide", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background="green", 
+                    tableOutput("Tables")),
         
         tabItem(tabName = "Exploration", h2(uiOutput("title")),
                 selectizeInput("causes", "Causes", choices = levels(as.factor(pdata$Cause))),

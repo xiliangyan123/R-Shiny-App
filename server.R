@@ -44,7 +44,7 @@ shinyServer(function(input, output, session) {
     output$dataplot <- renderPlot({
         
         #get filtered data
-        newData <- getData()
+        newData <- getData() %>% filter(State=="Texas" | State=="California" | State=="Florida")
         
         #create plot
         g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
@@ -110,9 +110,47 @@ shinyServer(function(input, output, session) {
     }
     )
     
-    output$model1 <- renderUI({
-        newData <- getData()
-        model <- lm(AADR ~ Deaths, data=newData)
-
+    #Filter data for only 3 largest states in the U.S.
+    filtdata <- pdata %>% dplyr::filter(State=="Texas" | State=="Florida" | State=="California")
+    
+    #Begin making dynamic user interface for choosing models 
+    ModelData <- reactive({
+        filtdata[, c("AADR", input$slrmodel)]
     })
+    
+    #Models to choose from
+    model1 <- lm(AADR ~ Deaths, data=filtdata)
+    model2 <- lm(AADR ~ Year, data=filtdata)
+    model3 <- lm(AADR ~ State, data=filtdata)
+    
+    model4 <- lm(AADR ~ Deaths + Cause, data=filtdata)
+    model5 <- lm(AADR ~ Deaths + State, data=filtdata)
+    model6 <- lm(AADR ~ ., data = filtdata)
+    
+    output$plot1 <- renderPlot({
+        par(mar=c(5.1, 4.1, 0, 1))
+        plot(ModelData())
+        if(input$slrmodel=='Deaths'){abline(model1)}
+        if(input$slrmodel=='Year'){abline(model2)}
+        if(input$slrmodel=='State'){abline(model3)}
+    })
+
+    dapcs <- prcomp(select(pdata, AADR, Deaths))
+    yapcs <- prcomp(select(pdata, AADR, Year))
+    
+    output$pc <- renderPlot({
+    if(input$PCs=="Deaths"){
+        biplot(dapcs, xlabs=rep(".", nrow(pdata)), cex=1.5)
+    }
+    if(input$PCs=="Year"){
+        biplot(yapcs, xlabs=rep(".", nrow(pdata)), cex=1.2)
+    }
+    })
+    
+    output$mtable <- renderTable(({
+        head(ModelData(), 10)
+    }))
+    
+    
+    
 })

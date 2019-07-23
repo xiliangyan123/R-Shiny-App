@@ -5,20 +5,17 @@ library(devtools)
 library(dplyr)
 library(DT)
 library(ggplot2)
+library(caret)
+library(ggfortify)
 
 data <- read_csv("Dataset.csv") 
 pdata <- data %>% filter(Year==2010:2015 & Cause!="All causes" & State!="United States")
-
-#filtdata <- pdata %>% dplyr::filter(State=="Texas" | State=="Florida" | State=="California")
 url <- a("My github page", href="https://github.com/xiliangyan123/R-Shiny-App")
 urldata <- a("Dataset", href="https://catalog.data.gov/dataset/age-adjusted-death-rates-for-the-top-10-leading-causes-of-death-united-states-2013")
 
-
-
-shinyServer(function(input, output, session) {
+shinyServer(function(input, output, session){
     
-    
-    #Create URLs for dataset and github page. 
+    #Link URLs to the dataset and personal github page. 
     output$datatab <- renderUI({
         tagList("Here you can find the dataset:", urldata)
     })
@@ -33,6 +30,9 @@ shinyServer(function(input, output, session) {
     getData1 <- reactive({
         newData <- pdata %>% filter(pdata$Cause == input$cause)
     })
+    getData2 <- reactive({
+        newData <- pdata %>% filter(pdata$Cause == input$cauze)
+    })
     
     #Dynamic UI that enables user to reset to default settings
     observe({
@@ -42,14 +42,13 @@ shinyServer(function(input, output, session) {
          }
          else
              updateSliderInput(session, "size", min=1, max=10, value=5)
-     })
+    })
     
     #create plot
     output$dataplot <- renderPlot({
         
         #get filtered data
         newData <- getData()
-        
         #create plot
         g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
         g + geom_point(size=input$size, aes(col=input$causes))
@@ -91,7 +90,7 @@ shinyServer(function(input, output, session) {
                "is", round(mean(newData$Deaths, na.rm = TRUE), 2), 
                "and the average age-adjusted death rate is", 
                round(mean(newData$AADR, na.rm = TRUE), 2), sep = " ")
-     })
+    })
      
     #create output of observations for data table page
     output$Tables <- renderDataTable({
@@ -102,7 +101,6 @@ shinyServer(function(input, output, session) {
     output$table <- renderDataTable({
         newdata <- getData() 
         print(newdata)
-        
     })
     
     #Make a button that allows us to download a csv file of the data
@@ -115,48 +113,74 @@ shinyServer(function(input, output, session) {
     }
     )
     
-    #Filter data for only 3 largest states in the U.S.
-    
     #Begin making dynamic user interface for choosing models 
     ModelData <- reactive({
         pdata[, c(input$slrmodel, "AADR")]
     })
     
-    #create simple models to choose from
+    #1st supervised learning model
+    #Create simple models to choose from
     model1 <- lm(AADR ~ Deaths, data=pdata)
     model2 <- lm(AADR ~ Year, data=pdata)
     model3 <- lm(AADR ~ State, data=pdata)
-    
     sum_mod1 <- summary(model1)
     
     output$plot1 <- renderPlot({
         par(mar=c(5.1, 4.1, 0, 1))
         plot(ModelData())
-        if(input$slrmodel=='Deaths'){abline(a=sum_mod1$coefficients[1,1], b=sum_mod1$coefficients[2,1])}
+        if(input$slrmodel=='Deaths'){
+            abline(a=sum_mod1$coefficients[1,1], b=sum_mod1$coefficients[2,1])
+            }
         if(input$slrmodel=='Year'){abline(model2)}
         if(input$slrmodel=='State'){abline(model3)}
     })
-
-    dapcs <- prcomp(select(pdata, AADR, Deaths))
-    yapcs <- prcomp(select(pdata, AADR, Year))
-    
-    output$pc <- renderPlot({
+    #Create Biplots
+    output$Biplot <- renderPlot({
+     
+     newdata <- getData2()
+     dapcs <- prcomp(select(newdata, AADR, Deaths))
+     yapcs <- prcomp(select(newdata, AADR, Year))
+     
     if(input$PCs=="Deaths"){
-        biplot(dapcs, xlabs=rep(".", nrow(pdata)), cex=1.5)
+         autoplot(dapcs, xlabs=rep(".", nrow(newdata)), cex=1.2, col="Green", labels=TRUE)
     }
-    if(input$PCs=="Year"){
-        biplot(yapcs, xlabs=rep(".", nrow(pdata)), cex=1.2)
+    
+    else if(input$PCs=="Year"){
+         autoplot(yapcs, xlabs=rep(".", nrow(newdata)), cex=1.2, col="Blue", labels=TRUE)
     }
     })
     
-    output$mtable <- renderTable(({
+    output$mtable <- renderTable({
         modeldata <- data.frame(Deaths = pdata$Deaths, AADR = pdata$AADR)
         model_lm <- lm(AADR ~ Deaths, data=modeldata)
         ddata <- data.frame(Deaths=input$Deaths)
         preddata <- predict(model_lm, ddata)
         
-    }))
+    })
     
-    output$rfmodel <- render
+    model4 <- lm(AADR ~ Deaths + Cause, data=pdata)
+    model5 <- lm(AADR ~ Deaths + Year, data=pdata)
+    model6 <- lm(AADR ~ Cause + Year, data=pdata)
+    
+    sum_mod4 <- summary(model4)
+    sum_mod5 <- summary(model5)
+    sum_mod6 <- summary(model6)
+    
+    #Second supervised learning model
+    output$mlrmodel<- renderTable({
+        if(input$mlrpreds=="Effect of Deaths and Cause on AADR"){
+            paste("R-squared: ", sum_mod4$r.squared, "As this is a multiple linear reg. model, we interpret the R-squared value as how the cause and year predictors are related.",
+                   "As the R-squared is high, we can conclude that the # of Deaths and Cause are highly related in measuring the death rate.")
+        }
+        else if(input$mlrpreds=="Effect of Deaths and Year on AADR"){
+            paste("R-squared: ", sum_mod5$r.squared, "As this is a multiple linear reg. model, we interpret the R-squared value as how the cause and year predictors are related.",
+                   "As the R-squared is low, we can conclude that the # of Deaths and Year aren't very related in measuring the death rate.")
+        }
+        else if(input$mlrpreds=="Effect of Cause and Year on AADR"){
+            paste("R-squared: ", sum_mod6$r.squared, "As this is a multiple linear reg. model, we interpret the R-squared value as how the cause and year predictors are related.",
+                  "As the R-squared is high, we can conclude that the cause and year are highly related in measuring the death rate.")
+            
+        }
+    })
     
 })

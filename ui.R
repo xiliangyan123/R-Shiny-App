@@ -18,7 +18,7 @@ dashboardSidebar(
         menuItem("Info Page", tabName = "Information", icon = icon("dashboard")),
         menuItem("Data Page", tabName = "Data", icon=icon('th')),
         menuItem("Data Exploration", tabName = "Exploration", icon=icon("th")),
-        menuItem("Unsupervised Learning", tabName = "Clustering", icon=icon('th')),
+        menuItem("Unsupervised Learning", tabName = "PCAnalysis", icon=icon('th')),
         menuItem("Modeling Page", tabName = "Models", icon=icon('th'))
     )
 ),
@@ -30,9 +30,11 @@ dashboardBody(
                 box(background = "green", width=12, h2("This App enables the user interact with different widgets that allows them to make graphical plots and summaries, apply unsupervised learning methods, incorporate modeling techniques, and more.")), 
                 box(background = "yellow", width=12, h2("Some useful links!"), uiOutput("tab"), uiOutput("datatab"))), 
         
-        tabItem(tabName = "Clustering", strong(em(h2("Unsupervised Learning"))),
-                fluidRow(box(selectizeInput("PCs", "Choose the principal components", choices = names(pdata[c(1, 3, 4)])))),
-                fluidRow(box(plotOutput("pc")))),
+        tabItem(tabName = "PCAnalysis", strong(em(h2("Unsupervised Learning"))),
+                box(background="green", width=10, title="About PCA", h2("The idea of principal component analysis ")),
+                fluidRow(selectizeInput("PCs", "Choose the principal components", choices = names(pdata[c(1,4)]))),
+                selectizeInput("cauze", "Look to see biplot based on causes", choices = levels(as.factor(pdata$Cause))),
+                fluidRow(column(4,(plotOutput("Biplot"))))),
         
         tabItem(tabName = "Models", strong(em(h2("Data Modeling"))), 
                 box(title="About", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width=10, background = "green", h2("Here, we want to predict the value of the Age Adjusted Death Rate according to some predictor values - Year and Cause"), 
@@ -41,8 +43,11 @@ dashboardBody(
                 plotOutput("plot1"),
                 sliderInput("Deaths", "Predict Death Rate by Number of Deaths", min=1000, max=50000, value=10000), 
                 tableOutput("mtable"),
-                selectizeInput("rfmodel", "Choose the rf predictors", choices=c("Deaths and Year", "Deaths and Cause", "Year and Cause")),
-                tableOutput("modelcomp")),
+                radioButtons("mlrpreds", "Choose the mlr predictors", 
+                               choices=c("Effect of Deaths and Cause on AADR", 
+                                         "Effect of Deaths and Year on AADR", 
+                                         "Effect of Cause and Year on AADR")),
+                tableOutput("mlrmodel")),
         
         tabItem(tabName = "Data", strong(em(h2("Data Tables"))),
                 fluidRow(box(title="About this app", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE, width = 10, background="green",

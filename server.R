@@ -9,10 +9,14 @@ library(ggplot2)
 data <- read_csv("Dataset.csv") 
 pdata <- data %>% filter(Year==2010:2015 & Cause!="All causes" & State!="United States")
 
+#filtdata <- pdata %>% dplyr::filter(State=="Texas" | State=="Florida" | State=="California")
+url <- a("My github page", href="https://github.com/xiliangyan123/R-Shiny-App")
+urldata <- a("Dataset", href="https://catalog.data.gov/dataset/age-adjusted-death-rates-for-the-top-10-leading-causes-of-death-united-states-2013")
+
+
+
 shinyServer(function(input, output, session) {
     
-    url <- a("My github page", href="https://github.com/xiliangyan123/R-Shiny-App")
-    urldata <- a("Dataset", href="https://catalog.data.gov/dataset/age-adjusted-death-rates-for-the-top-10-leading-causes-of-death-united-states-2013")
     
     #Create URLs for dataset and github page. 
     output$datatab <- renderUI({
@@ -44,7 +48,7 @@ shinyServer(function(input, output, session) {
     output$dataplot <- renderPlot({
         
         #get filtered data
-        newData <- getData() %>% filter(State=="Texas" | State=="California" | State=="Florida")
+        newData <- getData()
         
         #create plot
         g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
@@ -82,7 +86,7 @@ shinyServer(function(input, output, session) {
     #create our numeric summaries
     output$text <- renderText({
          #get filtered data
-         newData <- getData1()
+         newData <- getData()
          paste("The average deaths for cause", input$causes, 
                "is", round(mean(newData$Deaths, na.rm = TRUE), 2), 
                "and the average age-adjusted death rate is", 
@@ -90,14 +94,15 @@ shinyServer(function(input, output, session) {
      })
      
     #create output of observations for data table page
-    output$Tables <- renderTable({
-        newdata <- getData1() 
+    output$Tables <- renderDataTable({
+        newdata <- getData1()
     })
     
     #create output of observations for exploration page
-    output$table <- renderTable({
-        newdata <- getData() %>% head(n=10)
+    output$table <- renderDataTable({
+        newdata <- getData() 
         print(newdata)
+        
     })
     
     #Make a button that allows us to download a csv file of the data
@@ -111,26 +116,23 @@ shinyServer(function(input, output, session) {
     )
     
     #Filter data for only 3 largest states in the U.S.
-    filtdata <- pdata %>% dplyr::filter(State=="Texas" | State=="Florida" | State=="California")
     
     #Begin making dynamic user interface for choosing models 
     ModelData <- reactive({
-        filtdata[, c("AADR", input$slrmodel)]
+        pdata[, c(input$slrmodel, "AADR")]
     })
     
-    #Models to choose from
-    model1 <- lm(AADR ~ Deaths, data=filtdata)
-    model2 <- lm(AADR ~ Year, data=filtdata)
-    model3 <- lm(AADR ~ State, data=filtdata)
+    #create simple models to choose from
+    model1 <- lm(AADR ~ Deaths, data=pdata)
+    model2 <- lm(AADR ~ Year, data=pdata)
+    model3 <- lm(AADR ~ State, data=pdata)
     
-    model4 <- lm(AADR ~ Deaths + Cause, data=filtdata)
-    model5 <- lm(AADR ~ Deaths + State, data=filtdata)
-    model6 <- lm(AADR ~ ., data = filtdata)
+    sum_mod1 <- summary(model1)
     
     output$plot1 <- renderPlot({
         par(mar=c(5.1, 4.1, 0, 1))
         plot(ModelData())
-        if(input$slrmodel=='Deaths'){abline(model1)}
+        if(input$slrmodel=='Deaths'){abline(a=sum_mod1$coefficients[1,1], b=sum_mod1$coefficients[2,1])}
         if(input$slrmodel=='Year'){abline(model2)}
         if(input$slrmodel=='State'){abline(model3)}
     })
@@ -148,9 +150,13 @@ shinyServer(function(input, output, session) {
     })
     
     output$mtable <- renderTable(({
-        head(ModelData(), 10)
+        modeldata <- data.frame(Deaths = pdata$Deaths, AADR = pdata$AADR)
+        model_lm <- lm(AADR ~ Deaths, data=modeldata)
+        ddata <- data.frame(Deaths=input$Deaths)
+        preddata <- predict(model_lm, ddata)
+        
     }))
     
-    
+    output$rfmodel <- render
     
 })

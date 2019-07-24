@@ -1,3 +1,4 @@
+#load in packages
 library(shiny)
 library(shinydashboard)
 library(readr)
@@ -8,8 +9,11 @@ library(ggplot2)
 library(caret)
 library(ggfortify)
 
+#Load in our data and filter by year
 data <- read_csv("Dataset.csv") 
 pdata <- data %>% filter(Year==2010:2015 & Cause!="All causes" & State!="United States")
+
+#Set up URLs 
 url <- a("My github page", href="https://github.com/xiliangyan123/R-Shiny-App")
 urldata <- a("Dataset", href="https://catalog.data.gov/dataset/age-adjusted-death-rates-for-the-top-10-leading-causes-of-death-united-states-2013")
 
@@ -23,7 +27,7 @@ shinyServer(function(input, output, session){
         tagList("Here you can see visit my github page to see code:", url)
     })
     
-    #Get our Filtered Data
+    #Get our Filtered Data dynamically. 
     getData <- reactive({
         newData <- pdata %>% filter(pdata$Cause == input$causes)
     })
@@ -54,6 +58,7 @@ shinyServer(function(input, output, session){
         g + geom_point(size=input$size, aes(col=input$causes))
     })
     
+    #Make a reactive plot. 
     plotInput <- reactive({
         #get filtered data
         newData <- getData()
@@ -62,7 +67,8 @@ shinyServer(function(input, output, session){
         g <- ggplot(newData, aes(x=Deaths, y=AADR)) 
         g + geom_point(size=input$size, aes(col=input$causes))
     })
-
+    
+    #Make the plot downloadable to a png file. 
     output$DownloadPlot <- downloadHandler(
         filename = function() { paste(input$causes, '.png', sep='') },
         content = function(file) {
@@ -82,7 +88,7 @@ shinyServer(function(input, output, session){
         paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
     })
     
-    #create our numeric summaries
+    #Get our numeric summaries
     output$text <- renderText({
          #get filtered data
          newData <- getData()
@@ -92,18 +98,18 @@ shinyServer(function(input, output, session){
                round(mean(newData$AADR, na.rm = TRUE), 2), sep = " ")
     })
      
-    #create output of observations for data table page
+    #create table of output observations for data table page
     output$Tables <- renderDataTable({
         newdata <- getData1()
     })
     
-    #create output of observations for exploration page
+    #create table of output observations for exploration page
     output$table <- renderDataTable({
         newdata <- getData() 
         print(newdata)
     })
     
-    #Make a button that allows us to download a csv file of the data
+    #Make a button that downloads a csv file of the data
     output$DownloadData <- downloadHandler(
         filename = function(){
         paste(input$cause, ".csv", sep="")
@@ -142,14 +148,15 @@ shinyServer(function(input, output, session){
      yapcs <- prcomp(select(newdata, AADR, Year))
      
     if(input$PCs=="Deaths"){
-         autoplot(dapcs, xlabs=rep(".", nrow(newdata)), cex=1.2, col="Green", labels=TRUE)
+         biplot(dapcs, xlabs=rep(".", nrow(newdata)), cex=1.8, col="Green")
     }
     
     else if(input$PCs=="Year"){
-         autoplot(yapcs, xlabs=rep(".", nrow(newdata)), cex=1.2, col="Blue", labels=TRUE)
+         biplot(yapcs, xlabs=rep(".", nrow(newdata)), cex=1.8, col="Blue")
     }
     })
     
+    #Predict our death rate based on # of deaths. Used a sliderinput. 
     output$mtable <- renderTable({
         modeldata <- data.frame(Deaths = pdata$Deaths, AADR = pdata$AADR)
         model_lm <- lm(AADR ~ Deaths, data=modeldata)
@@ -158,15 +165,17 @@ shinyServer(function(input, output, session){
         
     })
     
+    #Make the models for our MLR models. 
     model4 <- lm(AADR ~ Deaths + Cause, data=pdata)
     model5 <- lm(AADR ~ Deaths + Year, data=pdata)
     model6 <- lm(AADR ~ Cause + Year, data=pdata)
     
+    #Summaries to get our coefficients of R-Squared. 
     sum_mod4 <- summary(model4)
     sum_mod5 <- summary(model5)
     sum_mod6 <- summary(model6)
     
-    #Second supervised learning model
+    #Second supervised learning model - MLR
     output$mlrmodel<- renderTable({
         if(input$mlrpreds=="Effect of Deaths and Cause on AADR"){
             paste("R-squared: ", sum_mod4$r.squared, "As this is a multiple linear reg. model, we interpret the R-squared value as how the cause and year predictors are related.",

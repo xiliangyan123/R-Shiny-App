@@ -125,3 +125,5 @@ dashboardBody(
 )
 )
 )
+
+shiny::runGitHub("xiliangyan123/R-Shiny-App")

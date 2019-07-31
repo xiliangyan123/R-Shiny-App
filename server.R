@@ -88,6 +88,43 @@ shinyServer(function(input, output, session){
         paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
     })
     
+    output$biplottext <- renderUI({
+        if(input$PCs=="Year"){
+            paste0("Here we look at the linear combination of the AADR 
+                   and the Year variables for the cause: ", input$cauze,". This biplot shows 
+                   us how strongly the principal components, Year and AADR, influence each other, and to what extent,
+                   shown by the arrows and the points. Here we can see that the Year somewhat influences the AADR
+                   as shown by how long the line or vector is for both components. However, it can be difficult to tell as well, 
+                   since the points are scattered in a odd-looking pattern.")
+        }
+        else if(input$PCs=="Deaths"){
+            paste0("Here we look at the linear combination of 2 principal components: AADR and the 
+                   Deaths. The cause of death that we are looking at is: ", input$cauze,". This biplot 
+                   shows us how strongly the principal components influence each other and to what extent, 
+                   as shown by the arrows and the points. Here we can see that the Deaths component greatly influences the 
+                   AADR, as the number of deaths, intuitively, tells us how the death rate will be. The line or vector that is pointing out, 
+                   indicates a strong relationship, which can also be shown in the direction of the points. ")
+        }
+    })
+    
+    #Create text for model output
+    output$modeltext <- renderUI({
+        if(input$slrmodel=="Year"){
+            paste0("It looks like that as we have the Year to measure our AADR, we visualize an interesting 
+                   regression plot. We can view the frequency or # of occurrences with how the levels of AADR
+                   that we have. For example, for 2015, we have AADR relatively spread out, with the higher levels
+                   having many occurrences 150 and 250 for the AADR. As for the previous years, we see that they are 
+                   more concentrated around a smaller interval such as 150 and 200. This may seem to indicate that as year
+                   grows, the death rate may be variable and highly unpredictable given the top 10 causes of death in the U.S.")
+        }
+        
+        else if(input$slrmodel=="Deaths"){
+            paste0("It looks like the number of deaths appears to be a great predictor of the death rate, as expected. 
+                   Since the Death rate resembles the number of deaths from a population given a certain time frame, the 
+                   deaths that we have seem to be correlated with our death rate. ")
+        }
+    })
+    
     #Get our numeric summaries
     output$text <- renderText({
          #get filtered data

@@ -53,7 +53,8 @@ dashboardBody(
                 selectizeInput("PCs", "Choose the principal components", choices = names(pdata[c(1,4)])),
                 
                 selectizeInput("cauze", "Look to see biplot based on causes", choices = levels(as.factor(pdata$Cause))),
-                
+                uiOutput("biplottext"),
+                br(), 
                 box(title = "BiPlot", width = 6, plotOutput("Biplot")))),
         
         tabItem(tabName = "Models", strong(em(h2("Data Modeling"))), 
@@ -69,8 +70,9 @@ dashboardBody(
                 helpText(h4('An example of a multiple linear reg. model - 
                                 $$y = b_1x_1 + b_2x_2 + b_3x_1x_2 + e$$'))),
                 
-                selectizeInput("slrmodel", "Simple Linear Reg. Model - choose the explanatory variable to visualize relation to the death rate", names(pdata)[c(1,3,4)]),
-                
+                selectizeInput("slrmodel", "Simple Linear Reg. Model - choose the explanatory variable to visualize relation to the death rate", names(pdata)[c(1,4)]),
+                uiOutput("modeltext"),
+                br(),
                 plotOutput("plot1"),
                 
                 sliderInput("Deaths", "Predict Death Rate by Number of Deaths", min=1000, max=50000, value=10000), 

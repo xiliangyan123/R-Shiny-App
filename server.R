@@ -14,7 +14,7 @@ data <- read_csv("Dataset.csv")
 pdata <- data %>% filter(Year==2010:2015 & Cause!="All causes" & State!="United States")
 
 #Set up URLs 
-url <- a("My github page", href="https://github.com/xiliangyan123/R-Shiny-App")
+url <- a("My github page", href="https://github.com/xiliangyan123/RShinyApp")
 urldata <- a("Dataset", href="https://catalog.data.gov/dataset/age-adjusted-death-rates-for-the-top-10-leading-causes-of-death-united-states-2013")
 
 shinyServer(function(input, output, session){
